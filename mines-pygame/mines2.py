@@ -4,6 +4,7 @@ import pygame
 import numpy as np
 import random as rd
 import time
+from _thread import *
 
 SCREENSIZE = 905
 
@@ -32,19 +33,16 @@ def end(x, game, win):
                     c = 200
                     iter = 0
                     if game.GAMESIZE == 9:
-                        while iter<5:
-                            it = iter*10
+                        while iter<6:
+                            it = iter*11
                             game.sqrs[i][j].col = (c-it*2,c+it,c-it*2)
                             #time.sleep(0.001)
                             iter +=1
-                            drawWin(win,game)
+                            drawPart(win,game,game.sqrs[i][j])
                     else:
                         game.sqrs[i][j].col = (100,255,100)
-
         drawWin(win,game)
-        #win.blit(text, (450 - text.get_width()//2, 450))
-        pygame.display.update()
-        pygame.time.delay(3000)
+
     elif not x:
         win.fill((255,255,255))
         s = "Verloren :("
@@ -57,23 +55,22 @@ def end(x, game, win):
                     c = 200
                     iter = 0
                     if game.GAMESIZE == 9:
-                        while iter<5:
-                            it = iter*10
+                        while iter<6:
+                            it = iter*11
                             game.sqrs[i][j].col = (c+it,c-it*2,c-it*2)
                             #time.sleep(0.001)
                             iter +=1
-                            drawWin(win, game)
+                            drawPart(win,game,game.sqrs[i][j])
                     else:
                         game.sqrs[i][j].col = (255,100,100)
-        
-
         drawWin(win,game)
-        #win.blit(text, (450 - text.get_width()//2, 450))
-        pygame.display.update()
-        pygame.time.delay(3000)
+       
+
+
 
 
 def drawWin(win,game):
+    print("full draw")
     win.fill((20,20,20))
     fin.draw(win,game)
     back.draw(win,game)
@@ -83,22 +80,45 @@ def drawWin(win,game):
             sqr.draw(win,game)
     pygame.display.update()
 
+def drawPart(win, game, sqr):
+    print("partial draw")
+    score.draw(win, game)
+    sqr.draw(win,game)
+    pygame.display.update([pygame.Rect(sqr.x,sqr.y,sqr.size,sqr.size),pygame.Rect(score.x,score.y,score.size,score.size)])
+
+def ctc(game):
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                del game
+                pygame.quit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                return
+
 
 def main(GAMESIZE,BOMBCOUNT,TEXTSIZE,SQRSIZE):
     game = Game(GAMESIZE,BOMBCOUNT,TEXTSIZE,SQRSIZE)
     clock = pygame.time.Clock()
     run = True
     win.fill((20,20,20))
-    print(game.field.sum())
     first = True
-    change = True
+    change = False
+    update = (0,0)
+    no = True
+    sq = Square(0,0,(0,0,0),game)
+    back.text = "Back"
+    fin.text = "Finish"
     while run:
-        clock.tick(40)
-        back.text = "Back"
-        fin.text = "Finish"
+        clock.tick(60)
         score.text = "! " + str(game.BOMBCOUNT-game.tagged) 
-        if change:
+        if no:
             drawWin(win,game)
+            no = False
+        if change:
+            if sq.text != "" or (sq.text == "" and not game.field[sq.getX(game)][sq.getY(game)]):
+                drawPart(win,game,sq)
+            elif sq.text == "":
+                drawWin(win,game)
         change = False
         pos = pygame.mouse.get_pos()
         for event in pygame.event.get():
@@ -114,7 +134,15 @@ def main(GAMESIZE,BOMBCOUNT,TEXTSIZE,SQRSIZE):
                     return
                 if but == 1 and fin.click(pos):
                     game.finish()
-                    end(True,game,win)
+                    drawWin(win,game)
+                    id = start_new_thread(end,(True,game,win))
+                    if game.GAMESIZE == 9:
+                        ctc(game)
+                    try:
+                        id.exit()
+                    except:
+                        print("thread already finished")
+                    pygame.time.delay(3000)
                     run = False
                     del game
                     return
@@ -125,13 +153,14 @@ def main(GAMESIZE,BOMBCOUNT,TEXTSIZE,SQRSIZE):
                             if sqr.click(pos) and but == 1:
                                 game.generate(sqr)
                                 first = False
-                                change = True
+                                no = True
                         else:
                             x = sqr.getX(game)
                             y = sqr.getY(game)
                             if sqr.click(pos) and but == 1 and not game.field[x][y] and not sqr.tagged:
                                 ret = sqr.set(game)
                                 change = True
+                                sq = sqr
                                 if ret == 1:
                                     run = False
                                     end(True, game,win)
@@ -145,6 +174,7 @@ def main(GAMESIZE,BOMBCOUNT,TEXTSIZE,SQRSIZE):
                             elif sqr.click(pos) and but == 3 and game.field[x][y] == 0:
                                 sqr.tag(game)
                                 change = True
+                                sq = sqr
 
 
 def start():

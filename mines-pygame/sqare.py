@@ -47,7 +47,7 @@ class Square:
         if game.bombs[x][y]:
             return -1
         game.field[x][y] = 1
-        nu = game.adj(True, x, y)
+        nu = game.adjBombs[x][y]
         if nu:
             self.text = str(nu)
         else:

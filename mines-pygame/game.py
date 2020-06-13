@@ -6,6 +6,7 @@ class Game:
     def __init__(self,GAMESIZE,BOMBCOUNT,TEXTSIZE,SQRSIZE):
         self.field = np.zeros((GAMESIZE,GAMESIZE), dtype=int)
         self.bombs = np.zeros((GAMESIZE,GAMESIZE), dtype=int)
+        self.adjBombs = np.zeros((GAMESIZE,GAMESIZE), dtype=int)
         self.GAMESIZE = GAMESIZE
         self.BOMBCOUNT = BOMBCOUNT
         self.TEXTSIZE = TEXTSIZE
@@ -49,7 +50,7 @@ class Game:
                     continue
                 if not self.field[i][j] and not self.bombs[i][j]:
                     self.sqrs[i][j].set(self)
-                    if not self.adj(True, i, j):
+                    if not self.adj(True,i,j):
                         self.propagate(j,i)
         return
 
@@ -65,11 +66,13 @@ class Game:
             self.bombs[e][r] = 1
             if self.adj(True, x,y) or self.adj(True,e,r) > 3:
                 self.bombs[e][r] = 0
+                
+        for i in range(0,self.GAMESIZE):
+            for j in range(0,self.GAMESIZE):
+                self.adjBombs[i][j] = self.adj(True,i,j)
 
-        print(self.bombs)
         self.sqrs[x][y].set(self)
         self.propagate(y,x)
-
 
     def won(self):
         if self.field.sum() + self.bombs.sum() == self.GAMESIZE**2:
