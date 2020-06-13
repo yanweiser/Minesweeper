@@ -1,12 +1,32 @@
 from sqare import Square
 from game import Game
+from highscore import Highscore
 import pygame
 import numpy as np
 import random as rd
 import time
 from _thread import *
+import os.path
+import os
 
 SCREENSIZE = 905
+if os.path.exists("highscore.txt"):
+    HS = "highscore.txt"
+elif os.path.exists("mines-pygame/highscore.txt"):
+    HS = "mines-pygame/highscore.txt"
+else:
+    f = open("highscore.txt", "w+")
+    f.write("0,0,0")
+    f.close
+    HS = "highscore.txt"
+hs = Highscore()
+file = hs.readdata(HS)
+hs.form(file)
+print(hs.hs)
+#hs.hs[1] = 40
+#file = hs.writedata(HS)
+#hs.writeHS(file)
+
 
 pygame.init()
 pygame.font.init()
@@ -36,7 +56,6 @@ def end(x, game, win):
                         while iter<6:
                             it = iter*11
                             game.sqrs[i][j].col = (c-it*2,c+it,c-it*2)
-                            #time.sleep(0.001)
                             iter +=1
                             drawPart(win,game,game.sqrs[i][j])
                     else:
@@ -58,7 +77,6 @@ def end(x, game, win):
                         while iter<6:
                             it = iter*11
                             game.sqrs[i][j].col = (c+it,c-it*2,c-it*2)
-                            #time.sleep(0.001)
                             iter +=1
                             drawPart(win,game,game.sqrs[i][j])
                     else:
@@ -163,18 +181,55 @@ def main(GAMESIZE,BOMBCOUNT,TEXTSIZE,SQRSIZE):
                                 sq = sqr
                                 if ret == 1:
                                     run = False
-                                    end(True, game,win)
+                                    id = start_new_thread(end,(False, game,win))
+                                    if game.GAMESIZE == 9:
+                                        ctc(game)
+                                    try:
+                                        id.exit()
+                                    except:
+                                        print("thread already finished")
+                                    run = False
+                                    pygame.time.delay(3000)
+                                    if GAMESIZE == 9:
+                                        hs.hs[0] = 100
+                                    elif GAMESIZE == 18:
+                                        hs.hs[1] = 100
+                                    else:
+                                        hs.hs[2] = 100
+                                    file = hs.writedata(HS)
+                                    hs.writeHS(file)
                                     del game
                                     return
                                 elif ret == -1:
-                                    end(False, game,win)
+
+                                    id = start_new_thread(end,(False, game,win))
+                                    if game.GAMESIZE == 9:
+                                        ctc(game)
+                                    try:
+                                        id.exit()
+                                    except:
+                                        print("thread already finished")
                                     run = False
+                                    pygame.time.delay(3000)
                                     del game
                                     return
                             elif sqr.click(pos) and but == 3 and game.field[x][y] == 0:
                                 sqr.tag(game)
                                 change = True
                                 sq = sqr
+
+def setup():
+    font1 = pygame.font.SysFont("comicsans", 70)
+    font2 = pygame.font.SysFont("comicsans", 55)
+    text1 = font1.render("highscores", 1, (0,0,0))
+    text2 = font2.render(str(hs.hs[0]), 1, (0,0,0))
+    text3 = font2.render(str(hs.hs[1]), 1, (0,0,0))
+    text4 = font2.render(str(hs.hs[2]), 1, (0,0,0))
+    win.fill((255,255,255))
+    win.blit(text1, (700,50))
+    win.blit(text2, (780, 200 - text2.get_height()/2))
+    win.blit(text3, (780, 450 - text3.get_height()/2))
+    win.blit(text4, (780, 700 - text4.get_height()/2))
 
 
 def start():
@@ -186,6 +241,8 @@ def start():
     med.text = "Medium"
     hard = Square(350,600, (180,0,0),test)
     hard.text = "Schwer"
+    setup()
+    pygame.display.update()
     while True:
         clock.tick(60)	
         win.fill((255,255,255))
@@ -211,7 +268,7 @@ def start():
             med.col = (255,127,80)
             hard.col = (180,0,0)
 
-        pygame.display.update()
+        pygame.display.update(pygame.Rect(100,0,500,900))
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -219,9 +276,15 @@ def start():
                 pos = pygame.mouse.get_pos()
                 if ez.click(pos):
                     main(GAMESIZE = 9,BOMBCOUNT = 20,TEXTSIZE = 60,SQRSIZE = 95)
+                    setup()
+                    pygame.display.update()
                 elif med.click(pos):
                     main(GAMESIZE = 18,BOMBCOUNT = 80,TEXTSIZE = 60,SQRSIZE = 45)
+                    setup()
+                    pygame.display.update()
                 elif hard.click(pos):
                     main(GAMESIZE = 36,BOMBCOUNT = 320,TEXTSIZE = 30,SQRSIZE = 20)
+                    setup()
+                    pygame.display.update()
               
 start()
