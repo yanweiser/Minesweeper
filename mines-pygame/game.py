@@ -64,7 +64,7 @@ class Game:
                 e+=1
                 r-=self.GAMESIZE
             self.bombs[e][r] = 1
-            if self.adj(True, x,y) or self.adj(True,e,r) > 3:
+            if self.adj(True, x,y) or self.adj(True,e,r) > 2:
                 self.bombs[e][r] = 0
                 
         for i in range(0,self.GAMESIZE):

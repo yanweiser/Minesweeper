@@ -180,8 +180,9 @@ def main(GAMESIZE,BOMBCOUNT,TEXTSIZE,SQRSIZE):
                                 change = True
                                 sq = sqr
                                 if ret == 1:
+                                    drawPart(win,game,sqr)
                                     run = False
-                                    id = start_new_thread(end,(False, game,win))
+                                    id = start_new_thread(end,(True, game,win))
                                     if game.GAMESIZE == 9:
                                         ctc(game)
                                     try:
