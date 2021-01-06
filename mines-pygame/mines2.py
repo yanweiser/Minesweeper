@@ -3,41 +3,21 @@ from game import Game
 from highscore import Highscore
 import pygame
 import numpy as np
-import random as rd
-import time
 from _thread import *
-import os.path
 import os
 
-SCREENSIZE = 905
-if os.path.exists("highscore.txt"):
-    HS = "highscore.txt"
-elif os.path.exists("mines-pygame/highscore.txt"):
-    HS = "mines-pygame/highscore.txt"
-else:
-    f = open("highscore.txt", "w+")
-    f.write("0,0,0")
-    f.close
-    HS = "highscore.txt"
-hs = Highscore()
-file = hs.readdata(HS)
-hs.form(file)
-print(hs.hs)
-#hs.hs[1] = 40
-#file = hs.writedata(HS)
-#hs.writeHS(file)
 
+SCREENSIZE = 905
+hs = Highscore()
+hs.form()
 
 pygame.init()
 pygame.font.init()
 win = pygame.display.set_mode((SCREENSIZE+400,SCREENSIZE))
-
 test = Game(0,0,60,200)
 back = Square(1000,100,(100,100,100),test)
 fin = Square(1000,350, (100,100,100),test)
 score = Square(1000,600,(150,80,80),test)
-
-
 
 
 def end(x, game, win):
@@ -84,9 +64,6 @@ def end(x, game, win):
         drawWin(win,game)
        
 
-
-
-
 def drawWin(win,game):
     print("full draw")
     win.fill((20,20,20))
@@ -98,12 +75,14 @@ def drawWin(win,game):
             sqr.draw(win,game)
     pygame.display.update()
 
+    
 def drawPart(win, game, sqr):
     print("partial draw")
     score.draw(win, game)
     sqr.draw(win,game)
     pygame.display.update([pygame.Rect(sqr.x,sqr.y,sqr.size,sqr.size),pygame.Rect(score.x,score.y,score.size,score.size)])
 
+    
 def ctc(game):
     while True:
         for event in pygame.event.get():
@@ -123,32 +102,31 @@ def main(GAMESIZE,BOMBCOUNT,TEXTSIZE,SQRSIZE):
     change = False
     update = (0,0)
     no = True
-    sq = Square(0,0,(0,0,0),game)
+    sq = None
     back.text = "Back"
     fin.text = "Finish"
+    score.text = "! " + str(game.BOMBCOUNT-game.tagged)
     while run:
         clock.tick(60)
-        score.text = "! " + str(game.BOMBCOUNT-game.tagged) 
         if no:
             drawWin(win,game)
             no = False
         if change:
-            if sq.text != "" or (sq.text == "" and not game.field[sq.getX(game)][sq.getY(game)]):
+            if sq.text != "" or (sq.text == "" and not game.field[sq.col][sq.row]):
                 drawPart(win,game,sq)
             elif sq.text == "":
                 drawWin(win,game)
-        change = False
+            change = False
         pos = pygame.mouse.get_pos()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
-                del game
                 pygame.quit()
+                exit()
             if event.type == pygame.MOUSEBUTTONDOWN:
                 but = event.button
                 if but == 1 and back.click(pos):
                     run = False
-                    del game
                     return
                 if but == 1 and fin.click(pos):
                     game.finish()
@@ -160,12 +138,11 @@ def main(GAMESIZE,BOMBCOUNT,TEXTSIZE,SQRSIZE):
                         id.exit()
                     except:
                         print("thread already finished")
-                    pygame.time.delay(3000)
+                    ctc(game)
                     run = False
-                    del game
                     return
-                for i in range(0,game.GAMESIZE):
-                    for sqr in game.sqrs[i]:
+                for col in game.sqrs:
+                    for sqr in col:
                         pos = pygame.mouse.get_pos()
                         if first:
                             if sqr.click(pos) and but == 1:
@@ -173,8 +150,8 @@ def main(GAMESIZE,BOMBCOUNT,TEXTSIZE,SQRSIZE):
                                 first = False
                                 no = True
                         else:
-                            x = sqr.getX(game)
-                            y = sqr.getY(game)
+                            x = sqr.col
+                            y = sqr.row
                             if sqr.click(pos) and but == 1 and not game.field[x][y] and not sqr.tagged:
                                 ret = sqr.set(game)
                                 change = True
@@ -190,19 +167,16 @@ def main(GAMESIZE,BOMBCOUNT,TEXTSIZE,SQRSIZE):
                                     except:
                                         print("thread already finished")
                                     run = False
-                                    pygame.time.delay(3000)
+                                    ctc(game)
                                     if GAMESIZE == 9:
                                         hs.hs[0] = 100
                                     elif GAMESIZE == 18:
                                         hs.hs[1] = 100
                                     else:
                                         hs.hs[2] = 100
-                                    file = hs.writedata(HS)
-                                    hs.writeHS(file)
-                                    del game
+                                    hs.writeHS()
                                     return
                                 elif ret == -1:
-
                                     id = start_new_thread(end,(False, game,win))
                                     if game.GAMESIZE == 9:
                                         ctc(game)
@@ -211,12 +185,13 @@ def main(GAMESIZE,BOMBCOUNT,TEXTSIZE,SQRSIZE):
                                     except:
                                         print("thread already finished")
                                     run = False
-                                    pygame.time.delay(3000)
-                                    del game
+                                    ctc(game)
+                                    run = False
                                     return
                             elif sqr.click(pos) and but == 3 and game.field[x][y] == 0:
                                 sqr.tag(game)
                                 change = True
+                                score.text = "! " + str(game.BOMBCOUNT-game.tagged)
                                 sq = sqr
 
 def setup():
