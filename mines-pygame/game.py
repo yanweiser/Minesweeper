@@ -4,9 +4,9 @@ from sqare import Square
 
 class Game:
     def __init__(self,GAMESIZE,BOMBCOUNT,TEXTSIZE,SQRSIZE):
-        self.field = np.zeros((GAMESIZE,GAMESIZE), dtype=int)
-        self.bombs = np.zeros((GAMESIZE,GAMESIZE), dtype=int)
-        self.adjBombs = np.zeros((GAMESIZE,GAMESIZE), dtype=int)
+        self.field = np.zeros((GAMESIZE,GAMESIZE), dtype='int8')
+        self.bombs = np.zeros((GAMESIZE,GAMESIZE), dtype='int8')
+        self.adjBombs = np.zeros((GAMESIZE,GAMESIZE), dtype='int8')
         self.GAMESIZE = GAMESIZE
         self.BOMBCOUNT = BOMBCOUNT
         self.TEXTSIZE = TEXTSIZE
@@ -44,6 +44,7 @@ class Game:
         return ret
 
     def propagate(self,x,y):
+        #print(f"propagate called on ({x},{y})")
         for i in range(x-1,x+2):
             for j in range(y-1,y+2):
                 if (i,j) == (x,y) or i not in range(0,self.GAMESIZE) or j not in range(0,self.GAMESIZE):
@@ -51,6 +52,7 @@ class Game:
                 if not self.field[i][j] and not self.bombs[i][j]:
                     self.sqrs[i][j].set(self)
                     if not self.adjBombs[i][j]:
+                        #print(f"further propagating to ({i},{j})")
                         self.propagate(i,j)
         return
     
@@ -65,17 +67,13 @@ class Game:
         y = sqr.row
         while self.bombs.sum() < self.BOMBCOUNT:
             r = rd.randint(0,(self.GAMESIZE*self.GAMESIZE) - 1 )
-            e = 0
-            while r > self.GAMESIZE - 1:
-                e+=1
-                r-=self.GAMESIZE
+            e = r//self.GAMESIZE
+            r = r%self.GAMESIZE
             if self.bombs[e][r] or self.near((e,r),(x,y)):
                 continue
             self.bombs[e][r] = 1
-            for i in range(0,self.GAMESIZE):
-                for j in range(0,self.GAMESIZE):
-                    if self.adj(True,i,j) > 2:
-                        self.bombs[e][r] = 0
+            if self.adj(True,e,r) > 2:
+                self.bombs[e][r] = 0
                 
         for i in range(0,self.GAMESIZE):
             for j in range(0,self.GAMESIZE):

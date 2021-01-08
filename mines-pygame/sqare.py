@@ -1,4 +1,3 @@
-import numpy as np
 import pygame
 
 class Square:
@@ -15,9 +14,9 @@ class Square:
         
 
     def draw(self, win, game):
-        pygame.draw.rect(win, self.color, (self.x, self.y, self.size, self.size)
-        text = self.font.render(self.text, 1, (0,0,0))
-        win.blit(text, (self.x + round(self.size/2) - round(text.get_width()/2), self.y + round(self.size/2) - round(text.get_height()/2)))
+        pygame.draw.rect(win, self.color, (self.x, self.y, self.size, self.size))
+        txt = self.font.render(self.text, 1, (0,0,0))
+        win.blit(txt, (self.x + round(self.size/2) - round(txt.get_width()/2), self.y + round(self.size/2) - round(txt.get_height()/2)))
 
 
     def tag(self,game):
@@ -34,6 +33,11 @@ class Square:
     def set(self,game):
         x = self.col
         y = self.row
+        #print(f"setting ({x},{y})")
+        if game.field[x][y]:
+            #print(f"field ({x},{y}) is already set, returning")
+            return 0
+        #print(game.bombs)
         if game.bombs[x][y]:
             return -1
         game.field[x][y] = 1
@@ -41,8 +45,8 @@ class Square:
         if nu:
             self.text = str(nu)
         else:
-            game.propagate(y,x)
-        self.col = (100,100,255)
+            game.propagate(x,y)
+        self.color = (100,100,100)
         if game.won():
             return 1
         return 0

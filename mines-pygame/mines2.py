@@ -15,18 +15,20 @@ pygame.init()
 pygame.font.init()
 win = pygame.display.set_mode((SCREENSIZE+400,SCREENSIZE))
 test = Game(0,0,60,200)
-back = Square(1000,100,(100,100,100),test)
-fin = Square(1000,350, (100,100,100),test)
-score = Square(1000,600,(150,80,80),test)
+back = Square(1000,100,0,0,(100,100,100),test)
+fin = Square(1000,350, 0,0,(100,100,100),test)
+score = Square(1000,600,0,0,(150,80,80),test)
+ext = Square(1255,0,0,0,(100,100,100),Game(0,0,20,50))
 
 
 def end(x, game, win):
     if x:
+        #print("reached end -- win")
         win.fill((255,255,255))
-        s = "Gewonnen!! :)"
-        font = pygame.font.SysFont("comicsans", 80)
-        text = font.render(s, 1, (255,69,0))
-
+        #s = "Gewonnen!! :)"
+        #font = pygame.font.SysFont("comicsans", 80)
+        #text = font.render(s, 1, (255,69,0))
+        #win.blit(text, (x,y))
         for i in range(0,game.GAMESIZE):
             for j in range(0,game.GAMESIZE):
                 if game.bombs[i][j]:
@@ -34,20 +36,22 @@ def end(x, game, win):
                     iter = 0
                     if game.GAMESIZE == 9:
                         while iter<6:
+                            #print("painting...")
                             it = iter*11
-                            game.sqrs[i][j].col = (c-it*2,c+it,c-it*2)
+                            game.sqrs[i][j].color = (c-it*2,c+it,c-it*2)
                             iter +=1
                             drawPart(win,game,game.sqrs[i][j])
                     else:
-                        game.sqrs[i][j].col = (100,255,100)
+                        game.sqrs[i][j].color = (100,255,100)
         drawWin(win,game)
 
     elif not x:
         win.fill((255,255,255))
-        s = "Verloren :("
-        font = pygame.font.SysFont("comicsans", 80)
-        text = font.render(s, 1, (255,69,0))
-
+        #print("reached end -- lose")
+        #s = "Verloren :("
+        #font = pygame.font.SysFont("comicsans", 80)
+        #text = font.render(s, 1, (255,69,0))
+        #win.blit(text, (x,y))
         for i in range(0,game.GAMESIZE):
             for j in range(0,game.GAMESIZE):
                 if game.bombs[i][j]:
@@ -55,21 +59,22 @@ def end(x, game, win):
                     iter = 0
                     if game.GAMESIZE == 9:
                         while iter<6:
+                            #print("painting...")
                             it = iter*11
-                            game.sqrs[i][j].col = (c+it,c-it*2,c-it*2)
+                            game.sqrs[i][j].color = (c+it,c-it*2,c-it*2)
                             iter +=1
                             drawPart(win,game,game.sqrs[i][j])
                     else:
-                        game.sqrs[i][j].col = (255,100,100)
+                        game.sqrs[i][j].color = (255,100,100)
         drawWin(win,game)
        
 
 def drawWin(win,game):
-    print("full draw")
     win.fill((20,20,20))
     fin.draw(win,game)
     back.draw(win,game)
     score.draw(win,game)
+    ext.draw(win,game)
     for i in range(0,game.GAMESIZE):
         for sqr in game.sqrs[i]:
             sqr.draw(win,game)
@@ -77,7 +82,6 @@ def drawWin(win,game):
 
     
 def drawPart(win, game, sqr):
-    print("partial draw")
     score.draw(win, game)
     sqr.draw(win,game)
     pygame.display.update([pygame.Rect(sqr.x,sqr.y,sqr.size,sqr.size),pygame.Rect(score.x,score.y,score.size,score.size)])
@@ -106,7 +110,10 @@ def main(GAMESIZE,BOMBCOUNT,TEXTSIZE,SQRSIZE):
     back.text = "Back"
     fin.text = "Finish"
     score.text = "! " + str(game.BOMBCOUNT-game.tagged)
+    ext.text = "exit"
+    print("game start")
     while run:
+        #print("in mainloop")
         clock.tick(60)
         if no:
             drawWin(win,game)
@@ -125,6 +132,10 @@ def main(GAMESIZE,BOMBCOUNT,TEXTSIZE,SQRSIZE):
                 exit()
             if event.type == pygame.MOUSEBUTTONDOWN:
                 but = event.button
+                if but == 1 and ext.click(pos):
+                    run = False
+                    pygame.quit()
+                    exit()
                 if but == 1 and back.click(pos):
                     run = False
                     return
@@ -137,15 +148,17 @@ def main(GAMESIZE,BOMBCOUNT,TEXTSIZE,SQRSIZE):
                     try:
                         id.exit()
                     except:
-                        print("thread already finished")
+                        # print("thread already finished")
+                        pass
                     ctc(game)
                     run = False
                     return
-                for col in game.sqrs:
-                    for sqr in col:
+                for i in range(GAMESIZE):
+                    for sqr in game.sqrs[i]:
                         pos = pygame.mouse.get_pos()
                         if first:
                             if sqr.click(pos) and but == 1:
+                                print("first run --> generate")
                                 game.generate(sqr)
                                 first = False
                                 no = True
@@ -159,13 +172,15 @@ def main(GAMESIZE,BOMBCOUNT,TEXTSIZE,SQRSIZE):
                                 if ret == 1:
                                     drawPart(win,game,sqr)
                                     run = False
+                                    #print("calling end -- win")
                                     id = start_new_thread(end,(True, game,win))
                                     if game.GAMESIZE == 9:
                                         ctc(game)
                                     try:
                                         id.exit()
                                     except:
-                                        print("thread already finished")
+                                        pass
+                                        #print("thread already finished")
                                     run = False
                                     ctc(game)
                                     if GAMESIZE == 9:
@@ -177,13 +192,14 @@ def main(GAMESIZE,BOMBCOUNT,TEXTSIZE,SQRSIZE):
                                     hs.writeHS()
                                     return
                                 elif ret == -1:
+                                    #print("calling end -- lose")
                                     id = start_new_thread(end,(False, game,win))
-                                    if game.GAMESIZE == 9:
-                                        ctc(game)
+                                    ctc(game)
                                     try:
                                         id.exit()
                                     except:
-                                        print("thread already finished")
+                                        pass
+                                        #print("thread already finished")
                                     run = False
                                     ctc(game)
                                     run = False
@@ -211,11 +227,11 @@ def setup():
 def start():
     SQRSIZE = 200
     clock = pygame.time.Clock()
-    ez = Square(350,100, (0,180,0),test)
+    ez = Square(350,100,0,0, (0,180,0),test)
     ez.text = "Einfach"
-    med = Square(350,350, (255,127,80),test)
+    med = Square(350,350,0,0, (255,127,80),test)
     med.text = "Medium"
-    hard = Square(350,600, (180,0,0),test)
+    hard = Square(350,600,0,0, (180,0,0),test)
     hard.text = "Schwer"
     setup()
     pygame.display.update()
@@ -226,23 +242,26 @@ def start():
         med.draw(win,test)
         hard.draw(win,test)
         pos = pygame.mouse.get_pos()
-
         if ez.click(pos):
-            ez.col = (0,100,0)
-            med.col = (255,127,80)
-            hard.col = (180,0,0)
+            #print("ez button hover")
+            ez.color = (0,100,0)
+            med.color = (255,127,80)
+            hard.color = (180,0,0)
         elif med.click(pos):
-            ez.col = (0,180,0)
-            med.col = (180,80,50)
-            hard.col = (180,0,0)
+            #print("med button hover")
+            ez.color = (0,180,0)
+            med.color = (180,80,50)
+            hard.color = (180,0,0)
         elif hard.click(pos):
-            ez.col = (0,180,0)
-            med.col = (255,127,80)
-            hard.col = (100,0,0)
+            #print("hard button hover")
+            ez.color = (0,180,0)
+            med.color = (255,127,80)
+            hard.color = (100,0,0)
         else:
-            ez.col = (0,180,0)
-            med.col = (255,127,80)
-            hard.col = (180,0,0)
+            #print("no button hover")
+            ez.color = (0,180,0)
+            med.color = (255,127,80)
+            hard.color = (180,0,0)
 
         pygame.display.update(pygame.Rect(100,0,500,900))
         for event in pygame.event.get():

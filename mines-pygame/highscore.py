@@ -6,17 +6,17 @@ class Highscore:
     def __init__(self):
         self.hs = []
         if os.path.exists('highscore.txt'):
-            self.file = 'highscore.txt'
+            self.filepath = 'highscore.txt'
         elif os.path.exists('mines-pygame/highscore.txt'):
-            self.file = 'mines-pygame/highscore.txt'
+            self.filepath = 'mines-pygame/highscore.txt'
         else:
             file = open('highscore.txt','w+')
             file.write('0,0,0')
             file.close()
-            self.file = 'highscore.txt'
+            self.filepath = 'highscore.txt'
 
-    def form(self, file):
-        file = open(self.file, 'r')
+    def form(self):
+        file = open(self.filepath, 'r')
         dl = file.read()
         x = []
         args = dl.split(",")
@@ -27,7 +27,7 @@ class Highscore:
         file.close()
 
     def writeHS(self):
-        file = open(self.file, 'w')
+        file = open(self.filepath, 'w')
         file.write(self.makeStr())
         file.close()
 
