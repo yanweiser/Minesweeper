@@ -9,7 +9,7 @@ Für andere OS:
 
 Vorraussetzungen:
 
-numpy, pandas und pygame müssen installiert sein.
+numpy und pygame müssen installiert sein.
 
 Zum starten dann einfach die mines2.py Datei ausführen ($ python mines2.py)
 
