@@ -15,8 +15,9 @@ class Square:
 
     def draw(self, win, game):
         pygame.draw.rect(win, self.color, (self.x, self.y, self.size, self.size))
-        txt = self.font.render(self.text, 1, (0,0,0))
-        win.blit(txt, (self.x + round(self.size/2) - round(txt.get_width()/2), self.y + round(self.size/2) - round(txt.get_height()/2)))
+        if self.text:
+            txt = self.font.render(self.text, 1, (0,0,0))
+            win.blit(txt, (self.x + round(self.size/2) - round(txt.get_width()/2), self.y + round(self.size/2) - round(txt.get_height()/2)))
 
 
     def tag(self,game):
@@ -33,11 +34,8 @@ class Square:
     def set(self,game):
         x = self.col
         y = self.row
-        #print(f"setting ({x},{y})")
         if game.field[x][y]:
-            #print(f"field ({x},{y}) is already set, returning")
             return 0
-        #print(game.bombs)
         if game.bombs[x][y]:
             return -1
         game.field[x][y] = 1

@@ -27,6 +27,8 @@ class Game:
                 self.sqrs[i//n].append(Square(i+5,j+5,i//n,j//n,(200,200,200),self))
 
     def finish(self):
+        if not self.bombs.sum():
+            self.generate(self.sqrs[0][0])
         for i in range(0,self.GAMESIZE):
             for j in range(0, self.GAMESIZE):
                 if self.field[i][j] == 0 and self.bombs[i][j] == 0:
@@ -57,33 +59,26 @@ class Game:
         return
     
     
-    def near(self,t1,t2):
-        if t1 in ((t2[0],t2[1]),(t2[0],t2[1]+1),(t2[0],t2[1]-1),(t2[0]+1,t2[1]),(t2[0]-1,t2[1]),(t2[0]+1,t2[1]+1),(t2[0]+1,t2[1]-1),(t2[0]-1,t2[1]+1),(t2[0]-1,t2[1]-1)):
-            return True
-        return False
+    def near(self,t2):
+        return [(t2[0],t2[1]),(t2[0],t2[1]+1),(t2[0],t2[1]-1),(t2[0]+1,t2[1]),(t2[0]-1,t2[1]),(t2[0]+1,t2[1]+1),(t2[0]+1,t2[1]-1),(t2[0]-1,t2[1]+1),(t2[0]-1,t2[1]-1)]
 
     def generate(self,sqr):
         x = sqr.col
         y = sqr.row
+        f_near = set(self.near((x,y)))
         while self.bombs.sum() < self.BOMBCOUNT:
             r = rd.randint(0,(self.GAMESIZE*self.GAMESIZE) - 1 )
             e = r//self.GAMESIZE
             r = r%self.GAMESIZE
-            if self.bombs[e][r] or self.near((e,r),(x,y)):
+            if self.bombs[e][r] or (e,r) in f_near or (self.adj(True,e,r) > 3):
                 continue
             self.bombs[e][r] = 1
-            if self.adj(True,e,r) > 2:
-                self.bombs[e][r] = 0
                 
         for i in range(0,self.GAMESIZE):
             for j in range(0,self.GAMESIZE):
                 self.adjBombs[i][j] = self.adj(True,i,j)
 
         self.sqrs[x][y].set(self)
-        self.propagate(x,y)
 
     def won(self):
-        if self.field.sum() + self.bombs.sum() == self.GAMESIZE**2:
-            return True
-        else:
-            return False
+        return  self.field.sum() + self.bombs.sum() == self.GAMESIZE**2
